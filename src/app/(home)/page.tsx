@@ -1,4 +1,6 @@
 "use client";
+export const dynamic = "force-dynamic";
+
 
 import { ChatLayout } from "@/components/chat/chat-layout";
 import { generateUUID } from "@/lib/utils";

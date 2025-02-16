@@ -51,7 +51,7 @@ function SendCompleteCard({ result, action }: { result: string; action: string }
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-2">
 					<p className="font-semibold text-sm">{action} complete</p>
-					<CheckCircle className="w-4 h-4 text-green-400/80" />
+					<CheckCircle className="w-4 h-4" />
 				</div>
 				<SendResultDialog open={dialogOpen} onOpenChange={setDialogOpen} result={result} />
 			</div>
@@ -118,32 +118,60 @@ function ChatMessage({ message, isLast, isLoading, reload }: ChatMessageProps) {
 							key={index}
 							remarkPlugins={[remarkGfm]}
 							components={{
-								// Pour les paragraphes, on peut réduire l'espacement (marge) :
+								// Paragraphs
 								p: ({ node, ...props }) => (
-									<p className="my-2" {...props} /> // ici "my-1" (margin verticale) de Tailwind, ajuste à ton goût
+									<p className="my-2" {...props} />
 								),
-								// Pour les listes non ordonnées
+								// Unordered lists
 								ul: ({ node, ...props }) => (
-									<ul className="list-disc pl-5 -my-6" {...props} /> // list-disc pour les puces, pl-5 pour le padding left
+									<ul className="list-disc pl-5 -my-6" {...props} />
 								),
-								// Pour les items de listes, on peut aussi customiser la marge
+								// List items
 								li: ({ node, ...props }) => (
-									<li className="-my-2" {...props} /> // ajuster "my-0.5" pour moins d'espace entre les items
+									<li className="-my-2" {...props} />
 								),
-								code({ node, inline, className, children, ...props }: { node: any; inline: boolean; className: string; children: any;[key: string]: any }) {
-									const isBlock = !inline;
+								// Code blocks / inline code
+								code({
+									node,
+									inline,
+									className,
+									children,
+									...props
+								}: {
+									node: any
+									inline: boolean
+									className: string
+									children: any
+									[key: string]: any
+								}) {
+									const isBlock = !inline
 									if (isBlock) {
 										return (
 											<pre className="bg-accent text-accent-foreground p-6 rounded-md overflow-auto my-2" {...props}>
 												<code>{children}</code>
 											</pre>
-										);
+										)
 									}
 									return (
-										<code className="bg-accent  text-accent-foreground px-1 py-0.5 rounded" {...props}>
+										<code className="bg-accent text-accent-foreground px-1 py-0.5 rounded" {...props}>
 											{children}
 										</code>
-									);
+									)
+								},
+								// Anchor / links
+								a: ({ node, href, children, ...props }) => {
+									// Style mailto links differently
+									const isMailTo = href?.startsWith("mailto:")
+									return (
+										<a
+											href={href}
+											className={`underline text-blue-500"
+												}`}
+											{...props}
+										>
+											{children}
+										</a>
+									)
 								},
 							}}
 						>
@@ -156,7 +184,6 @@ function ChatMessage({ message, isLast, isLoading, reload }: ChatMessageProps) {
 
 
 					if (state === "partial-call" || state === "call") {
-						console.log("Partial call or call", part);
 						return (
 							<div key={toolCallId}>
 								<SendProcessCard toolName={toolName} />
@@ -182,6 +209,7 @@ function ChatMessage({ message, isLast, isLoading, reload }: ChatMessageProps) {
 
 							case "result": {
 								const displayResult = result as unknown as DisplayResultsData;
+								console.log("Display result", displayResult.data);
 								return (
 									<div key={toolCallId} className="my-6">
 										<ChartSimple
@@ -207,7 +235,6 @@ function ChatMessage({ message, isLast, isLoading, reload }: ChatMessageProps) {
 						}
 
 						if (toolName === "selectTable") {
-							console.log("Select table result", result);
 							return (
 								<div key={toolCallId} className="mt-2">
 									<SendCompleteCard result={result as string} action="Select Table" />

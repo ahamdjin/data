@@ -58,7 +58,6 @@ export default function ChartSimple({ data, chartTitle, chartDescription }: Char
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={data.length > 5 ? (value) => value.slice(0, 3) : undefined}
             />
             <ChartTooltip
               cursor={false}
