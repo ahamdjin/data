@@ -118,19 +118,15 @@ function ChatMessage({ message, isLast, isLoading, reload }: ChatMessageProps) {
 							key={index}
 							remarkPlugins={[remarkGfm]}
 							components={{
-								// Paragraphs
 								p: ({ node, ...props }) => (
 									<p className="my-2" {...props} />
 								),
-								// Unordered lists
 								ul: ({ node, ...props }) => (
 									<ul className="list-disc pl-5 -my-6" {...props} />
 								),
-								// List items
 								li: ({ node, ...props }) => (
 									<li className="-my-2" {...props} />
 								),
-								// Code blocks / inline code
 								code({
 									node,
 									inline,
@@ -158,9 +154,7 @@ function ChatMessage({ message, isLast, isLoading, reload }: ChatMessageProps) {
 										</code>
 									)
 								},
-								// Anchor / links
 								a: ({ node, href, children, ...props }) => {
-									// Style mailto links differently
 									const isMailTo = href?.startsWith("mailto:")
 									return (
 										<a
