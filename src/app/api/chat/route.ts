@@ -4,6 +4,7 @@ import { displayResults } from "./tools/displayResults";
 import { queryDatabase } from "./tools/queryDatabase";
 import { SYSTEM_PROMPT } from './prompts';
 import { selectTable } from './tools/selectTable';
+import { fhir_query } from '@/tools';
 
 export const maxDuration = 30;
 
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
       selectTable,
       queryDatabase,
       displayResults,
+      fhir_query,
     };
 
     const result = streamText({

@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm ci
+RUN npm ci && npm install fhir-kit-client
 
 # Set a build-time argument for OLLAMA_URL with a default value
 ARG OLLAMA_URL=http://127.0.0.1:11434
@@ -29,6 +29,8 @@ COPY --from=builder /app/node_modules ./node_modules
 # Set environment variable with a default value that can be overridden at runtime
 ENV OLLAMA_URL=http://127.0.0.1:11434
 ENV PORT=3000
+
+RUN mkdir -p /app/logs /app/cache
 
 EXPOSE 3000
 
