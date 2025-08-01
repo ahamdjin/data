@@ -11,7 +11,13 @@ import remarkGfm from "remark-gfm";
 import ButtonWithTooltip from "../button-with-tooltip";
 import { Button } from "../ui/button";
 import { useEffect, useRef } from 'react';
-import { Player } from '@lordicon/react';
+import dynamic from "next/dynamic";
+
+// Lordicon's Player uses the DOM at module initialization, so we
+// dynamically import it to avoid server-side execution during build
+const Player = dynamic(() => import("@lordicon/react").then((mod) => mod.Player), {
+  ssr: false,
+});
 
 import {
 	ChatBubble,
