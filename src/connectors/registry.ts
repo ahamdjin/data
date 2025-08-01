@@ -1,5 +1,3 @@
-'use server'
-
 import { Connector } from './base'
 import { PostgresLoader } from './postgresLoader'
 import { FhirLoader } from './fhirLoader'
