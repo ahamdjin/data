@@ -1,13 +1,16 @@
+'use server'
+
 import { Connector } from './base'
 import { PostgresLoader } from './postgresLoader'
 import { FhirLoader } from './fhirLoader'
 import { prisma } from '@/providers/prisma'
+import { connectorNames } from './names'
 
 /** Registry of available connectors */
-export const connectorRegistry = {
+export const connectorRegistry: Record<(typeof connectorNames)[number], Connector> = {
   postgres: new PostgresLoader('SELECT 1'),
   fhir: new FhirLoader('Patient')
-} satisfies Record<string, Connector>
+}
 
 /**
  * Return connectors that have saved credentials.

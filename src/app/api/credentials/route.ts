@@ -14,3 +14,9 @@ export async function POST(req: Request) {
   })
   return new Response('ok')
 }
+
+export async function GET() {
+  const secrets = await prisma.secrets.findMany({ select: { source: true } })
+  const names = Array.from(new Set(secrets.map((s) => s.source)))
+  return Response.json(names)
+}
