@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,12 +10,23 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import { connectorRegistry } from '@/connectors/registry'
+import { connectorNames } from '@/connectors/names'
 
 /** Dialog to store connector credentials */
 export function AddDatabaseDialog() {
   const [connected, setConnected] = useState<Record<string, boolean>>({})
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/credentials')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((active: string[]) => {
+        const state: Record<string, boolean> = {}
+        for (const name of active) state[name] = true
+        setConnected(state)
+      })
+      .catch(() => {})
+  }, [])
 
   async function onConnect(e: React.FormEvent<HTMLFormElement>, name: string) {
     e.preventDefault()
@@ -43,7 +54,7 @@ export function AddDatabaseDialog() {
           <DialogTitle>Connectors</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {Object.keys(connectorRegistry).map((name) => (
+          {connectorNames.map((name) => (
             <form key={name} onSubmit={(e) => onConnect(e, name)} className="border p-2 rounded">
               <p className="font-semibold mb-2">
                 {name} {connected[name] && <span className="text-green-500">Connected</span>}
