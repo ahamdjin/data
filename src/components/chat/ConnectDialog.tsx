@@ -117,6 +117,18 @@ export function AddDatabaseDialog() {
               Elastic Search
             </Button>
 
+            {/* FHIR */}
+            <Button variant="ghost" className="w-full justify-start py-4">
+              <Image
+                src="/fhir.svg"
+                alt="FHIR"
+                width={30}
+                height={30}
+                className="mr-2"
+              />
+              FHIR
+            </Button>
+
             {/* Custom */}
             <Button variant="ghost" className="w-full justify-start py-4">
               <Image
