@@ -13,5 +13,21 @@ model FhirResource {
   id           Int      @id @default(autoincrement())
   resourceType String
   data         Json
+  embedding    Vector   @db.Vector(1536)
+  patientId    String?
+  encounterId  String?
   createdAt    DateTime @default(now())
+
+  @@index([patientId])
+  @@index([embedding])
+}
+
+model Secrets {
+  id        Int      @id @default(autoincrement())
+  source    String
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+
+  @@unique([source, key])
 }

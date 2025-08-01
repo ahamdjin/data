@@ -25,12 +25,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/node_modules ./node_modules
-RUN mkdir -p /app/logs /app/cache
+RUN addgroup -S app && adduser -S app -G app && mkdir -p /app/logs /app/cache
+USER app
 
 # Set environment variable with a default value that can be overridden at runtime
 ENV OLLAMA_URL=http://127.0.0.1:11434
 ENV PORT=3000
 
 EXPOSE 3000
+HEALTHCHECK CMD curl -f http://localhost:3000/health || exit 1
 
 CMD ["npm", "start"]

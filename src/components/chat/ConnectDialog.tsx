@@ -1,164 +1,68 @@
 "use client"
 
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { useState } from "react"
+  DialogTrigger
+} from '@/components/ui/dialog'
+import { connectorRegistry } from '@/connectors/registry'
 
+/** Dialog to store connector credentials */
 export function AddDatabaseDialog() {
-	const [open, setOpen] = useState(false)
+  const [connected, setConnected] = useState<Record<string, boolean>>({})
+  const [open, setOpen] = useState(false)
 
-	const onOpenChange = (newOpen: boolean) => {
-		setOpen(newOpen)
-	}
+  async function onConnect(e: React.FormEvent<HTMLFormElement>, name: string) {
+    e.preventDefault()
+    const form = e.currentTarget as HTMLFormElement
+    const url = (form.elements.namedItem('url') as HTMLInputElement).value
+    const user = (form.elements.namedItem('user') as HTMLInputElement).value
+    const pass = (form.elements.namedItem('pass') as HTMLInputElement).value
+    const res = await fetch('/api/credentials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: name, key: url, value: `${user}:${pass}` })
+    })
+    if (res.ok) setConnected({ ...connected, [name]: true })
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* 
-        The button that triggers the dialog.
-        You can reuse this entire component in multiple places.
-      */}
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-full gap-2 flex text-xs" variant={"outline"}>
-          Add Database
+        <Button variant="outline" className="rounded-full text-xs">
+          Connect
         </Button>
       </DialogTrigger>
-
-      {/* The dialog content */}
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Connect a Database</DialogTitle>
-          <DialogDescription>
-            Choose a database provider to integrate with your application.
-          </DialogDescription>
+          <DialogTitle>Connectors</DialogTitle>
         </DialogHeader>
-
-        {/* Main content area, styled as a 2-column layout */}
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Left column: icons and database names */}
-          <div className="md:w-1/2 border-r pr-4 space-y-2">
-            {/* Postgres */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/postgres.svg"
-                alt="Postgres"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              Postgres - <span className="text-xs ml-1 text-green-400">Connected</span>
-            </Button>
-
-            {/* Redis */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/redis.svg"
-                alt="Redis"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              Redis
-            </Button>
-          
-					  {/* Mysql */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/mysql.svg"
-                alt="Redis"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              Mysql
-            </Button>
-
-            {/* Firebase */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/firebase.svg"
-                alt="Firebase"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              Firebase
-            </Button>
-
-            {/* Mongo */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/mongo.svg"
-                alt="Mongo"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              Mongo
-            </Button>
-           
-					  {/* elastic */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/elastic.svg"
-                alt="Mongo"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              Elastic Search
-            </Button>
-
-            {/* FHIR */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/fhir.svg"
-                alt="FHIR"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              FHIR
-            </Button>
-
-            {/* Custom */}
-            <Button variant="ghost" className="w-full justify-start py-4">
-              <Image
-                src="/custom.svg"
-                alt="My DB"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              My Custom DB
-            </Button>
-          </div>
-
-          {/* Right column: explanation */}
-          <div className="md:w-1/2 gap-2 p-4 flex flex-col justify-center">
-            <h2 className="text-sm font-bold">What is a Database?</h2>
-            <p className="text-sm text-muted-foreground">
-              A database is a service that stores and organizes your data. Choose the provider
-              that best suits your application’s needs.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Once connected, you can manage data directly through our interface.
-            </p>
-						<Button className="rounded-full mt-6 self-center text-xs">Get a Database</Button>
-          </div>
+        <div className="space-y-4">
+          {Object.keys(connectorRegistry).map((name) => (
+            <form key={name} onSubmit={(e) => onConnect(e, name)} className="border p-2 rounded">
+              <p className="font-semibold mb-2">
+                {name} {connected[name] && <span className="text-green-500">Connected</span>}
+              </p>
+              {!connected[name] && (
+                <div className="space-y-2">
+                  <input name="url" required placeholder="URL" className="border p-1 w-full" />
+                  <input name="user" required placeholder="User" className="border p-1 w-full" />
+                  <input name="pass" required type="password" placeholder="Password" className="border p-1 w-full" />
+                  <Button type="submit" disabled={connected[name]}>Connect</Button>
+                </div>
+              )}
+            </form>
+          ))}
         </div>
-
-        {/* Optional footer for actions (e.g., a "Close" or "Confirm" button) */}
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Close</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
