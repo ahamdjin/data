@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/chat/SendToolExecutor.tsx", "src/lib/seed.mjs"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/chat/SendToolExecutor.tsx", "src/lib/seed.mjs", "types/**/*.d.ts"],
   "exclude": ["node_modules"]
 }
