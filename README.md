@@ -62,4 +62,12 @@ npm run dev
 
 [Lucide Icons](https://lucide.dev/) - Icon library
 
-[Vercel ai sdk](https://sdk.vercel.ai/) - AI/ML SDK for Vercel
+
+## Full Round-Trip FHIR Demo
+
+```bash
+npm install
+npx prisma migrate dev
+npm run ingest:fhir -- --sample
+npm run dev
+```

@@ -4,7 +4,7 @@ import path from 'path';
 import os from 'os';
 import { ensureDir, ensureFile } from '../src/lib/fs';
 
-const tmpBase = path.join(os.tmpdir(), 'fs-test');
+const tmpBase = 'fs-test-temp';
 
 afterEach(() => {
   if (fs.existsSync(tmpBase)) fs.rmSync(tmpBase, { recursive: true });

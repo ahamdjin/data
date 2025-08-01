@@ -22,6 +22,7 @@
     "@langchain/core": "^0.3.37",
     "@lordicon/react": "^1.10.1",
     "@mui/material": "^6.4.2",
+    "@prisma/client": "5.13.0",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.5",
@@ -82,11 +83,14 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.13",
+    "pg-mem": "2.1.4",
     "pino-pretty": "^13.0.0",
     "postcss": "^8.5.1",
+    "prisma": "5.13.0",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
+    "vite-tsconfig-paths": "4.3.2",
     "vitest": "^3.2.4"
   }
 }

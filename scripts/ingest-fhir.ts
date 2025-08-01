@@ -1,20 +1,22 @@
 #!/usr/bin/env ts-node
-import fs from 'fs/promises';
-import path from 'path';
-import { FhirLoader } from '../src/connectors/fhirLoader';
-import { ensureDir } from '../src/lib/fs';
+import fs from 'fs/promises'
+import { ensureDir } from '../src/lib/fs'
+import { FhirLoader } from '../src/connectors/fhirLoader'
+import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
+
+const args = yargs(hideBin(process.argv))
+  .option('since', { type: 'string' })
+  .option('max', { type: 'number' })
+  .parseSync()
 
 async function main() {
-  const resource = process.argv[2] || 'Patient';
-  const loader = new FhirLoader(resource);
-  const docs = await loader.load();
-  ensureDir('cache');
-  await fs.writeFile(path.join('cache', `${resource}.json`), JSON.stringify(docs, null, 2));
-  console.log(`Wrote ${docs.length} documents`);
+  const loader = new FhirLoader('Patient')
+  await loader.load()
 }
 
 main().catch(async (err) => {
-  ensureDir('logs');
-  await fs.writeFile('logs/ingest-fhir.err', String(err));
-  console.error(err);
-});
+  ensureDir('logs')
+  await fs.writeFile('logs/ingest-fhir.err', String(err))
+  console.error(err)
+})

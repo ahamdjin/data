@@ -5,6 +5,7 @@ import { queryDatabase } from "./tools/queryDatabase";
 import { SYSTEM_PROMPT } from './prompts';
 import { selectTable } from './tools/selectTable';
 import { fhir_query } from '@/tools';
+import { getActiveConnectors } from '@/connectors/registry';
 
 export const maxDuration = 30;
 
@@ -29,12 +30,13 @@ export async function POST(req: Request) {
 
     messages.unshift(SYSTEM_PROMPT);
 
-    const tools = {
-      selectTable,
-      queryDatabase,
-      displayResults,
-      fhir_query,
-    };
+    const active = await getActiveConnectors();
+    const tools: Record<string, any> = { selectTable, displayResults };
+    if (active.postgres) tools.queryDatabase = queryDatabase;
+    if (active.fhir) tools.fhir_query = fhir_query;
+    if (messages.some((m: any) => m.tool && !(m.tool in tools))) {
+      return new Response('Connector not configured', { status: 400 });
+    }
 
     const result = streamText({
       model: anthropic("claude-3-5-sonnet-latest"),

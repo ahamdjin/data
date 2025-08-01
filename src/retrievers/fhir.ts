@@ -1,4 +1,6 @@
 import FhirKitClient from 'fhir-kit-client';
+import { embedChunks } from '@/lib/embedChunks';
+import { prisma } from '@/providers/prisma';
 
 let client: FhirKitClient | null = null;
 
@@ -24,4 +26,16 @@ function getClient(): FhirKitClient {
  */
 export async function fhirQuery(resource: string, params: Record<string, string>) {
   return getClient().search({ resourceType: resource, searchParams: params });
+}
+
+/**
+ * Return documents similar to the question using pgvector search.
+ */
+export async function similar(question: string, k = 5) {
+  const [embedding] = await embedChunks([question]);
+  return prisma.$queryRawUnsafe(
+    `SELECT * FROM "FhirResource" ORDER BY embedding <-> $1 LIMIT $2`,
+    embedding,
+    k
+  );
 }
