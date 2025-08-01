@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,7 +10,49 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import { connectorNames } from '@/connectors/names'
+import { connectorRegistry } from '@/connectors/registry'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const credSchema = z.object({
+  url: z.string().url(),
+  user: z.string(),
+  pass: z.string()
+})
+type Creds = z.infer<typeof credSchema>
+
+function ConnectorCard({ name, connected, onDone }: { name: string; connected: boolean; onDone: () => void }) {
+  const { register, handleSubmit } = useForm<Creds>({ resolver: zodResolver(credSchema) })
+  const submit = handleSubmit(async (data) => {
+    const res = await fetch('/api/credentials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: name, creds: data })
+    })
+    if (res.ok) onDone()
+  })
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {name} {connected && <span className="text-green-500">✔</span>}
+        </CardTitle>
+      </CardHeader>
+      {!connected && (
+        <CardContent>
+          <form onSubmit={submit} className="space-y-2">
+            <input {...register('url')} placeholder="URL" className="border p-1 w-full" />
+            <input {...register('user')} placeholder="User" className="border p-1 w-full" />
+            <input {...register('pass')} type="password" placeholder="Password" className="border p-1 w-full" />
+            <Button type="submit">Connect</Button>
+          </form>
+        </CardContent>
+      )}
+    </Card>
+  )
+}
 
 /** Dialog to store connector credentials */
 export function AddDatabaseDialog() {
@@ -28,20 +70,6 @@ export function AddDatabaseDialog() {
       .catch(() => {})
   }, [])
 
-  async function onConnect(e: React.FormEvent<HTMLFormElement>, name: string) {
-    e.preventDefault()
-    const form = e.currentTarget as HTMLFormElement
-    const url = (form.elements.namedItem('url') as HTMLInputElement).value
-    const user = (form.elements.namedItem('user') as HTMLInputElement).value
-    const pass = (form.elements.namedItem('pass') as HTMLInputElement).value
-    const res = await fetch('/api/credentials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source: name, key: url, value: `${user}:${pass}` })
-    })
-    if (res.ok) setConnected({ ...connected, [name]: true })
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -54,20 +82,13 @@ export function AddDatabaseDialog() {
           <DialogTitle>Connectors</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {connectorNames.map((name) => (
-            <form key={name} onSubmit={(e) => onConnect(e, name)} className="border p-2 rounded">
-              <p className="font-semibold mb-2">
-                {name} {connected[name] && <span className="text-green-500">Connected</span>}
-              </p>
-              {!connected[name] && (
-                <div className="space-y-2">
-                  <input name="url" required placeholder="URL" className="border p-1 w-full" />
-                  <input name="user" required placeholder="User" className="border p-1 w-full" />
-                  <input name="pass" required type="password" placeholder="Password" className="border p-1 w-full" />
-                  <Button type="submit" disabled={connected[name]}>Connect</Button>
-                </div>
-              )}
-            </form>
+          {Object.keys(connectorRegistry).map((name) => (
+            <ConnectorCard
+              key={name}
+              name={name}
+              connected={!!connected[name]}
+              onDone={() => setConnected({ ...connected, [name]: true })}
+            />
           ))}
         </div>
         <DialogFooter>

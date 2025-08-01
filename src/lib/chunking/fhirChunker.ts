@@ -1,20 +1,21 @@
-import { Document } from '@/connectors/base';
+import { Document } from '@/connectors/base'
 
-export interface Chunk {
-  id: string;
-  text: string;
+export interface Chunk { id: string; text: string }
+
+/** Flatten a FHIR bundle into an array of resources. */
+export function flattenBundle(bundle: any): any[] {
+  return (bundle?.entry ?? []).map((e: any) => e.resource).filter(Boolean)
 }
 
 /**
- * Split FHIR documents into text chunks of a fixed size.
+ * Chunk a JSON object by stringifying and splitting every `size` characters.
  */
-export function fhirChunker(docs: Document[], size = 1000): Chunk[] {
-  const chunks: Chunk[] = [];
-  for (const doc of docs) {
-    const text = doc.text;
-    for (let i = 0; i < text.length; i += size) {
-      chunks.push({ id: doc.id, text: text.slice(i, i + size) });
-    }
+export function chunkJSON(json: any, size = 500): Chunk[] {
+  const text = typeof json === 'string' ? json : JSON.stringify(json)
+  const id = (json && (json.id || json.resourceType)) || 'unknown'
+  const out: Chunk[] = []
+  for (let i = 0; i < text.length; i += size) {
+    out.push({ id, text: text.slice(i, i + size) })
   }
-  return chunks;
+  return out
 }

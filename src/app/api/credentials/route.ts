@@ -1,22 +1,20 @@
-import crypto from 'crypto'
 import { prisma } from '@/providers/prisma'
+import { encrypt } from '@/lib/crypto'
 
 export async function POST(req: Request) {
-  const { source, key, value } = await req.json()
-  if (!source || !key || !value) {
-    return new Response('Invalid body', { status: 400 })
-  }
-  const hashed = crypto.scryptSync(value, 'salt', 32).toString('hex')
-  await prisma.secrets.upsert({
-    where: { source_key: { source, key } },
-    update: { value: hashed },
-    create: { source, key, value: hashed }
+  const { source, creds } = await req.json()
+  if (!source || !creds) return new Response('Invalid body', { status: 400 })
+  const value = encrypt(JSON.stringify(creds))
+  await prisma.secret.upsert({
+    where: { source_key: { source, key: 'creds' } },
+    update: { value },
+    create: { source, key: 'creds', value }
   })
-  return new Response('ok')
+  return Response.json({ status: 'connected' })
 }
 
 export async function GET() {
-  const secrets = await prisma.secrets.findMany({ select: { source: true } })
+  const secrets = await prisma.secret.findMany({ select: { source: true } })
   const names = Array.from(new Set(secrets.map((s) => s.source)))
   return Response.json(names)
 }

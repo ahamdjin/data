@@ -11,8 +11,12 @@ const args = yargs(hideBin(process.argv))
   .parseSync()
 
 async function main() {
-  const loader = new FhirLoader('Patient')
-  await loader.load()
+  const loader = new FhirLoader()
+  const resources = await loader.ingest({ since: args.since, max: args.max })
+  const chunks = await loader.chunk(resources)
+  const embeddings = await loader.embed(chunks)
+  await loader.upsert(chunks, embeddings)
+  console.log(`ingested ${resources.length} resources`)
 }
 
 main().catch(async (err) => {

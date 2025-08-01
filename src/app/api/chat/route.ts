@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     if (active.postgres) tools.queryDatabase = queryDatabase;
     if (active.fhir) tools.fhir_query = fhir_query;
     if (messages.some((m: any) => m.tool && !(m.tool in tools))) {
-      return new Response('Connector not configured', { status: 400 });
+      return Response.json({ error: 'Connector not connected' }, { status: 400 });
     }
 
     const result = streamText({
