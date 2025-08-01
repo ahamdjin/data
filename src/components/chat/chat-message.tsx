@@ -1,3 +1,5 @@
+"use client";
+
 import { CheckIcon, CopyIcon } from "@radix-ui/react-icons";
 import { ChatRequestOptions } from "ai";
 import { Message } from "ai/react";
