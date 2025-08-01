@@ -1,0 +1,17 @@
+// Run `npx prisma migrate dev --name init` after updating this schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model FhirResource {
+  id           Int      @id @default(autoincrement())
+  resourceType String
+  data         Json
+  createdAt    DateTime @default(now())
+}
