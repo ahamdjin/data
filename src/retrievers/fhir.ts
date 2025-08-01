@@ -32,10 +32,10 @@ export async function fhirQuery(resource: string, params: Record<string, string>
  * Return documents similar to the question using pgvector search.
  */
 export async function similar(question: string, k = 5) {
-  const [embedding] = await embedChunks([question]);
+  const [embedding] = await embedChunks([question])
   return prisma.$queryRawUnsafe(
     `SELECT * FROM "FhirResource" ORDER BY embedding <-> $1 LIMIT $2`,
     embedding,
     k
-  );
+  )
 }

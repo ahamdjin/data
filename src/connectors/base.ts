@@ -1,13 +1,21 @@
 export interface Document {
-  id: string;
-  text: string;
-  metadata?: Record<string, unknown>;
+  id: string
+  text: string
+  metadata?: Record<string, unknown>
 }
 
-/**
- * Base connector class for loading documents from external systems.
- */
+/** Base class for all data connectors. */
 export abstract class Connector {
-  /** Load documents from the source system. */
-  abstract load(): Promise<Document[]>;
+  /** Retrieve raw data from the source. */
+  abstract ingest(opts?: any): Promise<any[]>
+  /** Split records into text chunks. */
+  abstract chunk(data: any[]): Promise<Document[]>
+  /** Generate embeddings for documents. */
+  abstract embed(chunks: Document[]): Promise<number[][]>
+  /** Persist chunks and embeddings. */
+  abstract upsert(chunks: Document[], embeddings: number[][]): Promise<void>
+  /** Retrieve similar documents for a question. */
+  abstract similar(question: string, k: number): Promise<any[]>
+  /** Return true if credentials are configured. */
+  abstract connected(): Promise<boolean>
 }

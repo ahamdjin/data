@@ -12,23 +12,22 @@ generator client {
 }
 
 model FhirResource {
-  id           Int      @id @default(autoincrement())
+  id           String                @id @default(cuid())
   resourceType String
-  data         Json
-  embedding    Json
   patientId    String?
   encounterId  String?
-  createdAt    DateTime @default(now())
+  rawJson      Json
+  chunkText    String                @db.Text
+  embedding    Unsupported("vector")
+  createdAt    DateTime              @default(now())
 
   @@index([patientId])
 }
 
-model Secrets {
-  id        Int      @id @default(autoincrement())
+model Secret {
+  id        String   @id @default(cuid())
   source    String
   key       String
   value     String
   createdAt DateTime @default(now())
-
-  @@unique([source, key])
 }

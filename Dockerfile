@@ -1,5 +1,5 @@
 # Use Node.js as the base image
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
@@ -25,8 +25,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/node_modules ./node_modules
-RUN addgroup -S app && adduser -S app -G app && mkdir -p /app/logs /app/cache
-USER app
+RUN useradd -m node && mkdir -p /app/logs /app/cache
+USER node
 
 # Set environment variable with a default value that can be overridden at runtime
 ENV OLLAMA_URL=http://127.0.0.1:11434

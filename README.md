@@ -67,7 +67,7 @@ npm run dev
 
 ```bash
 npm install
-npx prisma migrate dev
+npx prisma migrate dev --name add_fhir_embedding
 npm run ingest:fhir -- --sample
 npm run dev
 ```
