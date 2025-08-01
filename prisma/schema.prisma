@@ -1,25 +1,26 @@
 // Run `npx prisma migrate dev --name init` after updating this schema
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 model FhirResource {
   id           Int      @id @default(autoincrement())
   resourceType String
   data         Json
-  embedding    Vector   @db.Vector(1536)
+  embedding    Json
   patientId    String?
   encounterId  String?
   createdAt    DateTime @default(now())
 
   @@index([patientId])
-  @@index([embedding])
 }
 
 model Secrets {
