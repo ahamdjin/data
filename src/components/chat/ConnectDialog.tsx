@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import { connectorRegistry } from '@/connectors/registry'
+import { connectorNames } from '@/connectors/names'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -82,7 +82,7 @@ export function AddDatabaseDialog() {
           <DialogTitle>Connectors</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {Object.keys(connectorRegistry).map((name) => (
+          {connectorNames.map((name) => (
             <ConnectorCard
               key={name}
               name={name}
