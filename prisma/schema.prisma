@@ -20,6 +20,7 @@ model FhirResource {
   chunkText    String                @db.Text
   embedding    Unsupported("vector")
   createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
 
   @@index([patientId])
 }
@@ -30,4 +31,5 @@ model Secret {
   key       String
   value     String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

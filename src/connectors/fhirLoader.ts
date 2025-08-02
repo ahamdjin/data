@@ -1,6 +1,7 @@
 import FhirKitClient from 'fhir-kit-client'
 import { Connector, Document } from './base'
 import { flattenBundle, chunkJSON } from '@/lib/chunking/fhirChunker'
+import pLimit from 'p-limit'
 import { embedChunks } from '@/lib/embedChunks'
 import { prisma } from '@/providers/prisma'
 
@@ -30,11 +31,18 @@ export class FhirLoader extends Connector {
     let url = `${this.resourceType}?_count=${this.pageSize}`
     if (opts.since) url += `&_lastUpdated=gt${opts.since}`
     const out: any[] = []
+    const seen = new Set<string>()
+    const limit = pLimit(5)
     while (url && (!opts.max || out.length < opts.max)) {
-      const bundle = await this.getClient().issueGetRequest(url)
-      const resources = flattenBundle(bundle)
+      const bundle = await limit(() => this.getClient().issueGetRequest(url))
+      const resources = flattenBundle(bundle).filter((r: any) => {
+        if (!r.id) return true
+        if (seen.has(r.id)) return false
+        seen.add(r.id)
+        return true
+      })
       out.push(...resources)
-      url = bundle.link?.find((l: any) => l.relation === 'next')?.url
+      url = (bundle as any).link?.find((l: any) => l.relation === 'next')?.url
     }
     return out.slice(0, opts.max ?? out.length)
   }
@@ -42,7 +50,7 @@ export class FhirLoader extends Connector {
   constructor(private resourceType: string = 'Patient') { super() }
 
   async chunk(resources: any[]): Promise<Document[]> {
-    return resources.flatMap((r: any) => chunkJSON(r, 500))
+    return resources.flatMap((r: any) => chunkJSON(r))
   }
 
   async embed(chunks: Document[]): Promise<number[][]> {
@@ -68,11 +76,10 @@ export class FhirLoader extends Connector {
 
   async similar(question: string, k: number): Promise<any[]> {
     const [e] = await embedChunks([question])
-    return prisma.$queryRawUnsafe(
-      `SELECT * FROM "FhirResource" ORDER BY embedding <-> $1 LIMIT $2`,
-      e,
-      k
-    )
+    const rows = await prisma.$queryRaw<any[]>`
+      SELECT id, "chunkText", embedding <-> ${e} AS score FROM "FhirResource" ORDER BY score ASC LIMIT ${k}
+    `
+    return rows.map((r) => ({ row: { id: r.id, text: r.chunkText, embedding: r.embedding }, score: Number(r.score), source: 'fhir' }))
   }
 
   async connected(): Promise<boolean> {

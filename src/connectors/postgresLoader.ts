@@ -3,6 +3,7 @@ import { generateUUID } from '@/lib/utils';
 import { Connector, Document } from './base';
 import { embedChunks } from '@/lib/embedChunks';
 import { prisma } from '@/providers/prisma';
+import format from 'pg-format'
 
 /**
  * Loads documents from a Postgres query.
@@ -11,7 +12,8 @@ export class PostgresLoader extends Connector {
   constructor(private query = 'SELECT 1') { super() }
 
   async ingest(): Promise<any[]> {
-    return sql.unsafe(this.query)
+    const safe = format('%s', this.query)
+    return sql(safe)
   }
 
   async chunk(rows: any[]): Promise<Document[]> {
@@ -29,7 +31,8 @@ export class PostgresLoader extends Connector {
 
   async similar(question: string, k: number): Promise<any[]> {
     const [e] = await embedChunks([question])
-    return sql.unsafe('SELECT * FROM "FhirResource" ORDER BY embedding <-> $1 LIMIT $2', [e, k])
+    const rows = await sql`SELECT *, embedding <-> ${sql.array(e)} as score FROM "FhirResource" ORDER BY score LIMIT ${k}`
+    return rows.map((r: any) => ({ row: r, score: Number(r.score), source: 'postgres' }))
   }
 
   async connected(): Promise<boolean> {
