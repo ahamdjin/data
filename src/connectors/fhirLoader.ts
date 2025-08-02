@@ -3,6 +3,7 @@ import { Connector, Document } from './base'
 import { flattenBundle, chunkJSON } from '@/lib/chunking/fhirChunker'
 import { embedChunks } from '@/lib/embedChunks'
 import { prisma } from '@/providers/prisma'
+import type { Prisma } from '@prisma/client'
 
 /** Connector that pulls resources from a FHIR server. */
 export class FhirLoader extends Connector {
@@ -42,7 +43,9 @@ export class FhirLoader extends Connector {
   constructor(private resourceType: string = 'Patient') { super() }
 
   async chunk(resources: any[]): Promise<Document[]> {
-    return resources.flatMap((r: any) => chunkJSON(r, 500))
+    return resources.flatMap((r: any) =>
+      chunkJSON(r, 500).map((c) => ({ ...c, metadata: { resource: r } }))
+    )
   }
 
   async embed(chunks: Document[]): Promise<number[][]> {
@@ -50,20 +53,33 @@ export class FhirLoader extends Connector {
   }
 
   async upsert(chunks: Document[], embeds: number[][]): Promise<void> {
-    await prisma.$transaction(
-      chunks.map((c, i) =>
-        prisma.fhirResource.create({
-          data: {
-            resourceType: this.resourceType,
-            rawJson: JSON.parse(c.text),
-            chunkText: c.text,
-            embedding: embeds[i],
-            patientId: undefined,
-            encounterId: undefined
+    const ops = chunks
+      .map((c, i) => {
+        try {
+          const raw = c.metadata?.resource
+          if (!raw || typeof raw !== 'object') {
+            throw new Error('Missing resource')
           }
-        })
-      )
-    )
+          return prisma.fhirResource.create({
+            data: {
+              resourceType: this.resourceType,
+              rawJson: raw,
+              chunkText: c.text,
+              embedding: embeds[i],
+              patientId: undefined,
+              encounterId: undefined
+            }
+          })
+        } catch (err) {
+          console.warn(`Skipping chunk ${c.id}: ${err}`)
+          return null
+        }
+      })
+      .filter((op): op is Prisma.PrismaPromise<any> => op !== null)
+
+    if (ops.length) {
+      await prisma.$transaction(ops)
+    }
   }
 
   async similar(question: string, k: number): Promise<any[]> {
