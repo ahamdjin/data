@@ -1,5 +1,5 @@
 import { Document } from '@/connectors/base'
-import { encoding_for_model } from '@dqbd/tiktoken'
+import { encodingForModel } from 'js-tiktoken'
 
 export interface Chunk { id: string; text: string }
 
@@ -8,7 +8,7 @@ export function flattenBundle(bundle: any): any[] {
   return (bundle?.entry ?? []).map((e: any) => e.resource).filter(Boolean)
 }
 
-const enc = encoding_for_model('text-embedding-3-large')
+const enc = encodingForModel('text-embedding-3-large')
 
 /**
  * Chunk a JSON object ensuring each piece stays under `maxTokens` tokens.

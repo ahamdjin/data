@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.8",
-    "@dqbd/tiktoken": "^1.0.21",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@emotion/react": "^11.14.0",
@@ -55,6 +54,7 @@
     "emoji-mart": "^5.6.0",
     "fhir-kit-client": "^1.9.2",
     "framer-motion": "^11.18.2",
+    "js-tiktoken": "1.0.19",
     "langchain": "^0.3.15",
     "lodash": "^4.17.21",
     "lucide-react": "^0.445.0",
