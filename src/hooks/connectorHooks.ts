@@ -20,10 +20,13 @@ export const useConnectorTest = (type: ConnectorName) => {
 };
 
 export const useSyncProgress = (connectorId: string) => {
-  const { data } = useSWR<{ percent: number }>(
+  const { data, error } = useSWR<{ percent: number }>(
     `/connectors/${connectorId}/progress`,
     fetcher,
     { refreshInterval: 1000 }
   );
+  if (error) {
+    return 0;
+  }
   return data?.percent ?? 0;
 };
