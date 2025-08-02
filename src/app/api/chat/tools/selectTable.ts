@@ -2,6 +2,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { SELECT_DB_TOOL_DESCRIPTION } from '../prompts';
 import { sql } from "@/providers/db";
+import { logger } from "@/lib/logger";
 
 export const selectTable = tool({
   description: SELECT_DB_TOOL_DESCRIPTION,
@@ -18,7 +19,7 @@ export const selectTable = tool({
       .describe("The relevant tables based on the user's request."),
   }),
   execute: async ({ selectedTables }) => {
-    console.log('Selected tables:\n', selectedTables);
+    logger.debug({ selectedTables }, 'Selected tables');
 
     const tableSchemas = [];
 

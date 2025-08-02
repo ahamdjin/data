@@ -2,6 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { QUERY_DB_TOOL_DESCRIPTION } from "../prompts";
 import { sql } from "@/providers/db";
+import { logger, sanitizeQuery } from "@/lib/logger";
 
 export const queryDatabase = tool({
   description: QUERY_DB_TOOL_DESCRIPTION,
@@ -10,7 +11,7 @@ export const queryDatabase = tool({
     id: z.union([z.number(), z.string()]).describe("Row id"),
   }),
   execute: async ({ table, id }) => {
-    console.log("QUERY:", table, id);
+    logger.debug({ query: sanitizeQuery(table) }, "Executing query");
 
     try {
       const result = await sql`SELECT * FROM ${sql(table)} WHERE id = ${id}`;
@@ -20,7 +21,7 @@ export const queryDatabase = tool({
         result,
       });
     } catch (error) {
-      console.error("Error executing query:", error);
+      logger.error({ err: error }, "Error executing query");
       throw new Error(String(error));
     }
   },
