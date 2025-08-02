@@ -6,17 +6,18 @@ import { sql } from "@/providers/db";
 export const queryDatabase = tool({
   description: QUERY_DB_TOOL_DESCRIPTION,
   parameters: z.object({
-    query: z.string().describe("SQL query to execute."),
+    table: z.string().describe("Table name"),
+    id: z.union([z.number(), z.string()]).describe("Row id"),
   }),
-  execute: async ({ query }) => {
-    console.log("QUERY:", query);
+  execute: async ({ table, id }) => {
+    console.log("QUERY:", table, id);
 
     try {
-      // Execute the raw SQL query using sql.unsafe()
-      const result = await sql.unsafe(query);
+      const result = await sql`SELECT * FROM ${sql(table)} WHERE id = ${id}`;
       return JSON.stringify({
-        query: query,
-        result: result, // returns an array of rows
+        table,
+        id,
+        result,
       });
     } catch (error) {
       console.error("Error executing query:", error);
