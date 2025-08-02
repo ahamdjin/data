@@ -1,5 +1,5 @@
 export const api = {
-  async post(url: string, body: any) {
+  async post<T>(url: string, body: unknown): Promise<T> {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -8,8 +8,14 @@ export const api = {
     if (!res.ok) {
       throw new Error(await res.text());
     }
-    return res.json();
+    return res.json() as Promise<T>;
   },
 };
 
-export const fetcher = (url: string) => fetch(url).then((res) => res.json());
+export const fetcher = async <T>(url: string): Promise<T> => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return res.json() as Promise<T>;
+};
