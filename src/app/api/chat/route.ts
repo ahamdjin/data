@@ -6,6 +6,7 @@ import { SYSTEM_PROMPT } from './prompts';
 import { selectTable } from './tools/selectTable';
 import { fhir_query } from '@/tools';
 import { getActiveConnectors } from '@/connectors/registry';
+import { logger, sanitizeMessages } from '@/lib/logger';
 
 export const maxDuration = 30;
 
@@ -26,7 +27,7 @@ export function errorHandler(error: unknown) {
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
-    console.log("[CHAT-API] Incoming messages:", messages);
+    logger.debug({ messages: sanitizeMessages(messages) }, "[CHAT-API] Incoming messages");
 
     messages.unshift(SYSTEM_PROMPT);
 
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
       getErrorMessage: errorHandler,
     });
   } catch (err) {
-    console.error("Global error:", err);
+    logger.error({ err }, "Global error");
     const errorMessage = errorHandler(err);
     // Return an error response with detailed information to the frontend
     return new Response(errorMessage, { status: 500 });
