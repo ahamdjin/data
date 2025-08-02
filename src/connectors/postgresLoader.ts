@@ -8,7 +8,9 @@ import { prisma } from '@/providers/prisma';
  * Loads documents from a Postgres query.
  */
 export class PostgresLoader extends Connector {
-  constructor(private query = 'SELECT 1') { super() }
+  constructor(private query = 'SELECT 1', private table = 'Embeddings') {
+    super()
+  }
 
   async ingest(): Promise<any[]> {
     return sql.unsafe(this.query)
@@ -29,7 +31,7 @@ export class PostgresLoader extends Connector {
 
   async similar(question: string, k: number): Promise<any[]> {
     const [e] = await embedChunks([question])
-    return sql`SELECT * FROM "FhirResource" ORDER BY embedding <-> ${e} LIMIT ${k}`
+    return sql`SELECT * FROM ${sql(this.table)} ORDER BY embedding <-> ${e} LIMIT ${k}`
   }
 
   async connected(): Promise<boolean> {
