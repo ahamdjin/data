@@ -3,11 +3,11 @@ export const dynamic = "force-dynamic";
 
 
 import { ChatLayout } from "@/components/chat/chat-layout";
-import { generateUUID } from "@/lib/utils";
+import { uuid } from "@/lib/utils";
 import React from "react";
 
 export default function Home() {
-  const id = generateUUID();
+  const id = uuid();
 
   return (
     <main className="flex h-[calc(100dvh)] flex-col items-center ">

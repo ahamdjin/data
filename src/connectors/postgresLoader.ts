@@ -1,5 +1,5 @@
 import { sql } from '@/providers/db';
-import { generateUUID } from '@/lib/utils';
+import { uuid } from '@/lib/utils';
 import { Connector, Document } from './base';
 import { embedChunks } from '@/lib/embedChunks';
 import { prisma } from '@/providers/prisma';
@@ -15,7 +15,7 @@ export class PostgresLoader extends Connector {
   }
 
   async chunk(rows: any[]): Promise<Document[]> {
-    return rows.map((r) => ({ id: String(r.id ?? generateUUID()), text: JSON.stringify(r) }))
+    return rows.map((r) => ({ id: String(r.id ?? uuid()), text: JSON.stringify(r) }))
   }
 
   async embed(chunks: Document[]): Promise<number[][]> {
@@ -29,7 +29,7 @@ export class PostgresLoader extends Connector {
 
   async similar(question: string, k: number): Promise<any[]> {
     const [e] = await embedChunks([question])
-    return sql.unsafe('SELECT * FROM "FhirResource" ORDER BY embedding <-> $1 LIMIT $2', [e, k])
+    return sql`SELECT * FROM "FhirResource" ORDER BY embedding <-> ${e} LIMIT ${k}`
   }
 
   async connected(): Promise<boolean> {
