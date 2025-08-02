@@ -7,17 +7,31 @@ import { prisma } from '@/providers/prisma'
 /** Connector that pulls resources from a FHIR server. */
 export class FhirLoader extends Connector {
   private pageSize = Number(process.env.FHIR_PAGE_SIZE ?? '50')
-  private client = new FhirKitClient({
-    baseUrl: process.env.FHIR_BASE_URL ?? '',
-    auth: { username: process.env.FHIR_USERNAME ?? '', password: process.env.FHIR_PASSWORD ?? '' }
-  } as any)
+  private client: FhirKitClient | null = null
+
+  private getClient(): FhirKitClient {
+    if (!this.client) {
+      const baseUrl = process.env.FHIR_BASE_URL
+      if (!baseUrl) {
+        throw new Error('Missing FHIR_BASE_URL environment variable')
+      }
+      this.client = new FhirKitClient({
+        baseUrl,
+        auth: {
+          username: process.env.FHIR_USERNAME ?? '',
+          password: process.env.FHIR_PASSWORD ?? ''
+        }
+      } as any)
+    }
+    return this.client
+  }
 
   async ingest(opts: { since?: string; max?: number } = {}): Promise<any[]> {
     let url = `${this.resourceType}?_count=${this.pageSize}`
     if (opts.since) url += `&_lastUpdated=gt${opts.since}`
     const out: any[] = []
     while (url && (!opts.max || out.length < opts.max)) {
-      const bundle = await this.client.issueGetRequest(url)
+      const bundle = await this.getClient().issueGetRequest(url)
       const resources = flattenBundle(bundle)
       out.push(...resources)
       url = bundle.link?.find((l: any) => l.relation === 'next')?.url

@@ -18,15 +18,15 @@ export function PlaceholdersAndVanishInput({
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startAnimation = () => {
+  const startAnimation = useCallback(() => {
     // This runs only on the client
     intervalRef.current = setInterval(() => {
       setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
     }, 3000);
-  };
+  }, [placeholders]);
 
   // Wrap document access in a check
-  const handleVisibilityChange = () => {
+  const handleVisibilityChange = useCallback(() => {
     if (typeof document === "undefined") return;
     if (document.visibilityState !== "visible" && intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -34,7 +34,7 @@ export function PlaceholdersAndVanishInput({
     } else if (document.visibilityState === "visible") {
       startAnimation();
     }
-  };
+  }, [startAnimation]);
 
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
@@ -54,7 +54,7 @@ export function PlaceholdersAndVanishInput({
         document.removeEventListener("visibilitychange", handleVisibilityChange);
       }
     };
-  }, [placeholders]);
+  }, [placeholders, startAnimation, handleVisibilityChange]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const newDataRef = useRef<any[]>([]);
