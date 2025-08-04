@@ -3,7 +3,10 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
+# Copy dependency manifests and Prisma schema early so that pnpm install
+# can run any postinstall scripts that rely on it.
 COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
 
 RUN corepack enable && pnpm install --frozen-lockfile && mkdir -p /app/logs /app/cache
 
