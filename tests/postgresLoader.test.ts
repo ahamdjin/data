@@ -24,7 +24,7 @@ const { sqlMock } = vi.hoisted(() => {
   return { sqlMock }
 })
 
-vi.mock('../src/providers/db', () => ({ sql: sqlMock }))
+vi.mock('../src/providers/db', () => ({ getDb: () => sqlMock }))
 
 vi.mock('../src/lib/embedChunks', () => ({
   embedChunks: vi.fn(async () => [[0.1, 0.2]])

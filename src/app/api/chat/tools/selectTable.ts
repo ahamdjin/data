@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { SELECT_DB_TOOL_DESCRIPTION } from '../prompts';
-import { sql } from "@/providers/db";
+import { getDb } from "@/providers/db";
 import { logger } from "@/lib/logger";
 
 export const selectTable = tool({
@@ -17,16 +17,19 @@ export const selectTable = tool({
         'feature_usage'
       ]))
       .describe("The relevant tables based on the user's request."),
+    database: z.string().optional().describe('Database name'),
   }),
-  execute: async ({ selectedTables }) => {
-    logger.debug({ selectedTables }, 'Selected tables');
+  execute: async ({ selectedTables, database = 'default' }) => {
+    logger.debug({ selectedTables, database }, 'Selected tables');
+
+    const db = getDb(database);
 
     const tableSchemas = [];
 
     // For each selected table, fetch its schema
     for (const tableName of selectedTables) {
       // Using a parameterized query with tagged template literals to avoid SQL injection.
-      const rows = await sql`
+      const rows = await db`
         SELECT column_name, data_type, is_nullable, column_default
         FROM information_schema.columns
         WHERE table_name = ${tableName}

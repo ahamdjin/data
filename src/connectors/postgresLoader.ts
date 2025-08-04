@@ -1,4 +1,5 @@
-import { sql } from '@/providers/db';
+import { getDb } from '@/providers/db';
+import type { Sql } from 'postgres';
 import { uuid } from '@/lib/utils';
 import { Connector, Document } from './base';
 import { embedChunks } from '@/lib/embedChunks';
@@ -8,12 +9,19 @@ import { prisma } from '@/providers/prisma';
  * Loads documents from a Postgres query.
  */
 export class PostgresLoader extends Connector {
-  constructor(private query = 'SELECT 1', private table = 'Embeddings') {
+  private sql: Sql
+
+  constructor(
+    private query = 'SELECT 1',
+    private table = 'Embeddings',
+    database = 'default'
+  ) {
     super()
+    this.sql = getDb(database)
   }
 
   async ingest(): Promise<any[]> {
-    return sql.unsafe(this.query)
+    return this.sql.unsafe(this.query)
   }
 
   async chunk(rows: any[]): Promise<Document[]> {
@@ -31,7 +39,7 @@ export class PostgresLoader extends Connector {
 
   async similar(question: string, k: number): Promise<any[]> {
     const [e] = await embedChunks([question])
-    return sql`SELECT * FROM ${sql(this.table)} ORDER BY embedding <-> ${e} LIMIT ${k}`
+    return this.sql`SELECT * FROM ${this.sql(this.table)} ORDER BY embedding <-> ${e} LIMIT ${k}`
   }
 
   async connected(): Promise<boolean> {
