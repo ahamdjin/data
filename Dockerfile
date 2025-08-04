@@ -3,9 +3,9 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 
-RUN npm ci && npm install fhir-kit-client && mkdir -p /app/logs /app/cache
+RUN corepack enable && pnpm install --frozen-lockfile && mkdir -p /app/logs /app/cache
 
 # Set a build-time argument for OLLAMA_URL with a default value
 ARG OLLAMA_URL=http://127.0.0.1:11434
@@ -13,7 +13,7 @@ ENV OLLAMA_URL=${OLLAMA_URL}
 
 COPY . .
 
-RUN npm run build
+RUN pnpm run build
 
 FROM node:20-slim
 
@@ -23,7 +23,7 @@ WORKDIR /app
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/package-lock.json ./package-lock.json
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/node_modules ./node_modules
 RUN useradd -m node && mkdir -p /app/logs /app/cache
 USER node
