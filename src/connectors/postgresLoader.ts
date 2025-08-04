@@ -1,23 +1,24 @@
-import { getDb } from '@/providers/db';
-import type { Sql } from 'postgres';
-import { uuid } from '@/lib/utils';
-import { Connector, Document } from './base';
-import { embedChunks } from '@/lib/embedChunks';
-import { prisma } from '@/providers/prisma';
+import { getDb } from '@/providers/db'
+import type { Sql } from 'postgres'
+import { uuid } from '@/lib/utils'
+import { Connector, Document } from './base'
+import { embedChunks } from '@/lib/embedChunks'
+import { prisma } from '@/providers/prisma'
 
 /**
  * Loads documents from a Postgres query.
  */
 export class PostgresLoader extends Connector {
-  private sql: Sql
-
   constructor(
     private query = 'SELECT 1',
     private table = 'Embeddings',
-    database = 'default'
+    private database = 'default'
   ) {
     super()
-    this.sql = getDb(database)
+  }
+
+  private get sql(): Sql {
+    return getDb(this.database)
   }
 
   async ingest(): Promise<any[]> {
@@ -39,7 +40,8 @@ export class PostgresLoader extends Connector {
 
   async similar(question: string, k: number): Promise<any[]> {
     const [e] = await embedChunks([question])
-    return this.sql`SELECT * FROM ${this.sql(this.table)} ORDER BY embedding <-> ${e} LIMIT ${k}`
+    const db = this.sql
+    return db`SELECT * FROM ${db(this.table)} ORDER BY embedding <-> ${e} LIMIT ${k}`
   }
 
   async connected(): Promise<boolean> {
