@@ -28,7 +28,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/node_modules ./node_modules
-RUN useradd -m node && mkdir -p /app/logs /app/cache
+# The base node image already includes a "node" user, so just create the
+# required directories without attempting to add the user again.
+RUN mkdir -p /app/logs /app/cache
 USER node
 
 # Set environment variable with a default value that can be overridden at runtime
