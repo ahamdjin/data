@@ -48,6 +48,15 @@ npm run dev
 
 **5. Go to [localhost:3000](http://localhost:3000) and start chatting with your DATA !**
 
+# Database configuration
+
+The application uses Postgres connection strings for database access. The
+primary database should be provided via the `DATABASE_URL` environment
+variable. To connect to multiple databases, define additional variables
+following the pattern `DATABASE_URL_<NAME>` (for example,
+`DATABASE_URL_ANALYTICS`). These named connections can be selected in code
+using the provided `getDb` helper.
+
 # Tech stack
 
 [NextJS](https://nextjs.org/) - React Framework for the Web

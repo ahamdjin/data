@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { QUERY_DB_TOOL_DESCRIPTION } from "../prompts";
-import { sql } from "@/providers/db";
+import { getDb } from "@/providers/db";
 import { logger, sanitizeQuery } from "@/lib/logger";
 
 export const queryDatabase = tool({
@@ -9,12 +9,15 @@ export const queryDatabase = tool({
   parameters: z.object({
     table: z.string().describe("Table name"),
     id: z.union([z.number(), z.string()]).describe("Row id"),
+    database: z.string().optional().describe("Database name"),
   }),
-  execute: async ({ table, id }) => {
-    logger.debug({ query: sanitizeQuery(table) }, "Executing query");
+  execute: async ({ table, id, database = "default" }) => {
+    logger.debug({ query: sanitizeQuery(table), database }, "Executing query");
+
+    const db = getDb(database);
 
     try {
-      const result = await sql`SELECT * FROM ${sql(table)} WHERE id = ${id}`;
+      const result = await db`SELECT * FROM ${db(table)} WHERE id = ${id}`;
       return JSON.stringify({
         table,
         id,
