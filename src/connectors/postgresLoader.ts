@@ -1,5 +1,5 @@
-import { getDb } from '@/providers/db'
-import type { Sql } from 'postgres'
+import { getAdapter } from '@/db/registry'
+import type { DbAdapter } from '@/db/Adapter'
 import { uuid } from '@/lib/utils'
 import { Connector, Document } from './base'
 import { embedChunks } from '@/lib/embedChunks'
@@ -17,12 +17,12 @@ export class PostgresLoader extends Connector {
     super()
   }
 
-  private get sql(): Sql {
-    return getDb(this.database)
+  private get db(): DbAdapter {
+    return getAdapter(this.database)
   }
 
   async ingest(): Promise<any[]> {
-    return this.sql.unsafe(this.query)
+    return this.db.query(this.query)
   }
 
   async chunk(rows: any[]): Promise<Document[]> {
@@ -40,8 +40,10 @@ export class PostgresLoader extends Connector {
 
   async similar(question: string, k: number): Promise<any[]> {
     const [e] = await embedChunks([question])
-    const db = this.sql
-    return db`SELECT * FROM ${db(this.table)} ORDER BY embedding <-> ${e} LIMIT ${k}`
+    return this.db.query(
+      `SELECT * FROM ${this.table} ORDER BY embedding <-> $1 LIMIT $2`,
+      [e, k]
+    )
   }
 
   async connected(): Promise<boolean> {
