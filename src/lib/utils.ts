@@ -1,9 +1,14 @@
-import crypto from "crypto"
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { v4 as uuidv4 } from "uuid"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const uuid = () => crypto.randomUUID()
+export const uuid = () => {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID()
+  }
+  return uuidv4()
+}
