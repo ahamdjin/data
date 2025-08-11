@@ -55,7 +55,7 @@ primary database should be provided via the `DATABASE_URL` environment
 variable. To connect to multiple databases, define additional variables
 following the pattern `DATABASE_URL_<NAME>` (for example,
 `DATABASE_URL_ANALYTICS`). These named connections can be selected in code
-using the provided `getDb` helper.
+using the provided `getAdapter` helper.
 
 # Tech stack
 
