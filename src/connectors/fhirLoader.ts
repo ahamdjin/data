@@ -67,7 +67,8 @@ export class FhirLoader extends Connector {
               chunkText: c.text,
               embedding: embeds[i],
               patientId: undefined,
-              encounterId: undefined
+              encounterId: undefined,
+              organizationId: process.env.ORG_ID || ''
             }
           })
         } catch (err) {

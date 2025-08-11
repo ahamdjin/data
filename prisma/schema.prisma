@@ -11,6 +11,53 @@ generator client {
   previewFeatures = ["postgresqlExtensions"]
 }
 
+model Organization {
+  id        String       @id @default(uuid())
+  name      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  memberships Membership[]
+  apiKeys     ApiKey[]
+  datasets    Dataset[]
+  fhirResources FhirResource[]
+}
+
+model Membership {
+  id             String       @id @default(uuid())
+  userId         String
+  organizationId String
+  role           String
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([userId, organizationId])
+}
+
+model ApiKey {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  hashedKey      String
+  createdAt      DateTime     @default(now())
+  lastUsedAt     DateTime?
+  disabled       Boolean      @default(false)
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Dataset {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  meta           Json?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+}
+
 model FhirResource {
   id           String                @id @default(cuid())
   resourceType String
@@ -19,9 +66,13 @@ model FhirResource {
   rawJson      Json
   chunkText    String                @db.Text
   embedding    Unsupported("vector")
+  organizationId String
   createdAt    DateTime              @default(now())
 
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   @@index([patientId])
+  @@index([organizationId])
 }
 
 model Secret {
