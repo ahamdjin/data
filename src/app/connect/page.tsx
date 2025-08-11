@@ -1,12 +1,8 @@
 import { loadPlugins, listConnectors } from "@/plugins/registry";
 import { ConnectorConfigForm } from "@/components/plugins/ConnectorConfigForm";
 
-let loaded = false;
 async function fetchConnectors() {
-  if (!loaded) {
-    await loadPlugins();
-    loaded = true;
-  }
+  await loadPlugins();
   // server-side fetch of list
   const connectors = listConnectors();
   return connectors.map(c => c.spec);

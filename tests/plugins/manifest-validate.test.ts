@@ -30,4 +30,12 @@ describe("Plugin runtime", () => {
     const rows = await conn.query<{ one: number }>({ sql: "SELECT 1 as one" });
     expect(rows[0].one).toBe(1);
   });
+
+  it("handles concurrent loads", async () => {
+    vi.resetModules();
+    const registry = await import("@/plugins/registry");
+    await Promise.all([registry.loadPlugins(), registry.loadPlugins()]);
+    const cs = registry.listConnectors();
+    expect(cs.map(c => c.spec.id)).toContain("postgres-basic");
+  });
 });
