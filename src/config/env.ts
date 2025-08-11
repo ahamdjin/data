@@ -6,8 +6,8 @@ import { z } from "zod";
  */
 const ServerEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  // Primary DB for the app
-  DATABASE_URL: z.string().url().describe("Primary database URL (e.g., Postgres)"),
+  // Primary DB for the app (optional for builds without a DB)
+  DATABASE_URL: z.string().url().optional().describe("Primary database URL (e.g., Postgres)"),
   // Optional extra DBs (A1 auto-loaded via DATABASE_URL_<NAME>), so no need to list here.
   // LLM keys (make optional if you support multiple providers)
   OPENAI_API_KEY: z.string().min(1).optional(),
