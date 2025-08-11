@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createPostgresAdapter } from '@/db/adapters/postgres';
 
-let db: ReturnType<typeof createPostgresAdapter>;
+const url = process.env.DATABASE_URL;
 
-describe('PostgresAdapter', () => {
+(url ? describe : describe.skip)('PostgresAdapter', () => {
+  let db: ReturnType<typeof createPostgresAdapter>;
+
   beforeAll(() => {
-    const url = process.env.DATABASE_URL;
-    if (!url) throw new Error('DATABASE_URL not set for tests');
-    db = createPostgresAdapter(url);
+    db = createPostgresAdapter(url!);
   });
 
   afterAll(async () => {

@@ -8,6 +8,9 @@ const plugins: PluginManifest[] = [];
 const connectors: Map<string, LoadedConnector> = new Map();
 const tools: Map<string, LoadedTool> = new Map();
 
+let loaded = false;
+let loading: Promise<void> | null = null;
+
 export function listPlugins() {
   return plugins.map(p => ({ id: p.id, displayName: p.displayName, version: p.version }));
 }
@@ -37,27 +40,34 @@ export function getTool(id: string): LoadedTool {
  * for bundlers; you can add more entries below as you add plugins.
  */
 export async function loadPlugins() {
-  // IMPORTANT: add any new plugin manifests here
-  const manifests: PluginManifest[] = [];
+  if (loaded) return;
+  if (!loading) {
+    loading = (async () => {
+      // IMPORTANT: add any new plugin manifests here
+      const manifests: PluginManifest[] = [];
 
-  // Postgres basic plugin
-  const pg = await import("./src__plugins__postgres-basic__manifest");
-  manifests.push(definePlugin(pg.default));
+      // Postgres basic plugin
+      const pg = await import("./src__plugins__postgres-basic__manifest");
+      manifests.push(definePlugin(pg.default));
 
-  // Custom HTTP plugin
-  const http = await import("./src__plugins__custom-http__manifest");
-  manifests.push(definePlugin(http.default));
+      // Custom HTTP plugin
+      const http = await import("./src__plugins__custom-http__manifest");
+      manifests.push(definePlugin(http.default));
 
-  // Register
-  for (const m of manifests) {
-    plugins.push(m);
-    for (const c of m.connectors) {
-      if (connectors.has(c.spec.id)) throw new Error(`Duplicate connector id: ${c.spec.id}`);
-      connectors.set(c.spec.id, { pluginId: m.id, spec: c.spec, create: c.create as any });
-    }
-    for (const t of m.tools) {
-      if (tools.has(t.spec.id)) throw new Error(`Duplicate tool id: ${t.spec.id}`);
-      tools.set(t.spec.id, { pluginId: m.id, spec: t.spec, create: t.create as any });
-    }
+      // Register
+      for (const m of manifests) {
+        plugins.push(m);
+        for (const c of m.connectors) {
+          if (connectors.has(c.spec.id)) throw new Error(`Duplicate connector id: ${c.spec.id}`);
+          connectors.set(c.spec.id, { pluginId: m.id, spec: c.spec, create: c.create as any });
+        }
+        for (const t of m.tools) {
+          if (tools.has(t.spec.id)) throw new Error(`Duplicate tool id: ${t.spec.id}`);
+          tools.set(t.spec.id, { pluginId: m.id, spec: t.spec, create: t.create as any });
+        }
+      }
+      loaded = true;
+    })();
   }
+  await loading;
 }
