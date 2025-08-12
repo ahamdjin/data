@@ -8,7 +8,8 @@ Currently available connectors:
 - Azure Blob Storage (`azure-blob`)
 
 Use the `/api/files/ingest` endpoint to enqueue an ingest job. The job pulls one or more
-objects, parses CSV/Parquet/Text formats, and saves documents + chunks. Optionally, it can
+objects, parses CSV/Parquet/Text/PDF/DOCX/HTML and image formats (via OCR), and saves
+documents + chunks. Duplicate content is skipped based on a content hash. Optionally, it can
 automatically enqueue an embedding job when `enqueueEmbed` is true.
 
 ## Example Requests
