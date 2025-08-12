@@ -72,6 +72,15 @@ export async function loadPlugins() {
       const snow = await import("./src__plugins__snowflake__manifest");
       manifests.push(definePlugin(snow.default));
 
+      const s3 = await import("./src__plugins__s3__manifest");
+      manifests.push(definePlugin(s3.default));
+
+      const gcs = await import("./src__plugins__gcs__manifest");
+      manifests.push(definePlugin(gcs.default));
+
+      const az = await import("./src__plugins__azure-blob__manifest");
+      manifests.push(definePlugin(az.default));
+
       // Register
       for (const m of manifests) {
         plugins.push(m);

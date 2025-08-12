@@ -1,11 +1,12 @@
 import { Worker, Job } from "bullmq";
 import IORedis from "ioredis";
 import { env } from "@/config/env";
-import { AnyJob, ConnectorIngestZ, DatasetEmbedZ } from "./jobs";
+import { AnyJob, ConnectorIngestZ, DatasetEmbedZ, FilesIngestZ } from "./jobs";
 import { DATAI_QUEUE_NAME } from "./queue";
 import { withTenant } from "@/db/withTenant";
 import { getAdapter } from "@/db/registry";
 import { loadPlugins, getConnector } from "@/plugins/registry";
+import { queue } from "./queue";
 import { getVectorStore } from "@/vector/registry";
 import { getEmbedder } from "@/embedding/registry";
 import { startOtelOnce } from "@/observability/otel";
@@ -127,12 +128,36 @@ async function processDatasetEmbed(job: Job<AnyJob>) {
   });
 }
 
+async function processFilesIngest(job: Job<any>) {
+  const payload = FilesIngestZ.parse(job.data);
+  const { orgId, connectorId, config, source, options, datasetId, enqueueEmbed } = payload;
+
+  return withTenant(orgId, async () => {
+    await loadPlugins();
+    const { create } = getConnector(connectorId);
+    const conn = create(config);
+
+    await job.updateProgress(1);
+    const res = (await conn.ingest?.({ source, options: { ...options, datasetId } })) ?? { count: 0 };
+    await job.updateProgress(50);
+
+    if (enqueueEmbed && res.count > 0) {
+      await queue.add("dataset.embed", { type: "dataset.embed", orgId, datasetId, batchSize: 64 });
+    }
+
+    await job.updateProgress(100);
+    return res;
+  });
+}
+
 async function route(job: Job<AnyJob>) {
   switch (job.data.type) {
     case "connector.ingest":
       return processConnectorIngest(job);
     case "dataset.embed":
       return processDatasetEmbed(job);
+    case "files.ingest":
+      return processFilesIngest(job);
     default:
       throw new Error(`Unknown job type: ${(job.data as any).type}`);
   }
