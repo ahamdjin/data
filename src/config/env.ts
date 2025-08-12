@@ -14,7 +14,8 @@ const ServerEnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   // Misc runtime knobs
   PORT: z.coerce.number().default(3000),
-  REDIS_URL: z.string().url().describe("Redis connection URL for BullMQ"),
+  // Queue backend; optional for builds that don't need background jobs
+  REDIS_URL: z.string().url().optional().describe("Redis connection URL for BullMQ"),
   QUEUE_CONCURRENCY: z.coerce.number().default(5),
   // Feature flags (as strings -> booleans later)
   ENABLE_CONNECTOR_HTTP: z.string().optional(), // "true"/"false"

@@ -7,10 +7,14 @@ import { withTenant } from "@/db/withTenant";
 import { getAdapter } from "@/db/registry";
 import { loadPlugins, getConnector } from "@/plugins/registry";
 
-const connection = new IORedis(env.server.REDIS_URL, {
-  maxRetriesPerRequest: null,
-  enableReadyCheck: false,
-});
+// Create Redis connection only when configured so builds can proceed without Redis.
+let connection: IORedis | undefined;
+if (env.server.REDIS_URL) {
+  connection = new IORedis(env.server.REDIS_URL, {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+  });
+}
 
 function setProgress(job: Job, p: number) {
   const pct = Math.max(0, Math.min(100, Math.round(p)));
@@ -59,16 +63,18 @@ async function route(job: Job<AnyJob>) {
   }
 }
 
-export const worker = new Worker<AnyJob>(DATAI_QUEUE_NAME, route, {
-  connection,
-  concurrency: env.server.QUEUE_CONCURRENCY,
-});
+export const worker = connection
+  ? new Worker<AnyJob>(DATAI_QUEUE_NAME, route, {
+      connection,
+      concurrency: env.server.QUEUE_CONCURRENCY,
+    })
+  : null;
 
-worker.on("completed", async () => {
+worker?.on("completed", async () => {
   // no-op
 });
 
-worker.on("failed", async (job, err) => {
+worker?.on("failed", async (job, err) => {
   if (!job) return;
   const orgId = (job.data as any).orgId as string | undefined;
   if (orgId) {
