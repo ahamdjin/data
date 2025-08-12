@@ -19,6 +19,10 @@ const ServerEnvSchema = z.object({
   QUEUE_CONCURRENCY: z.coerce.number().default(5),
   // Feature flags (as strings -> booleans later)
   ENABLE_CONNECTOR_HTTP: z.string().optional(), // "true"/"false"
+  OTEL_SERVICE_NAME: z.string().default("datai"),
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(), // e.g., http://localhost:4318
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+  ENABLE_OBSERVABILITY: z.string().optional(), // "true" to enable SDK
 });
 
 /**
@@ -48,6 +52,10 @@ const rawServer = {
   REDIS_URL: process.env.REDIS_URL,
   QUEUE_CONCURRENCY: process.env.QUEUE_CONCURRENCY,
   ENABLE_CONNECTOR_HTTP: process.env.ENABLE_CONNECTOR_HTTP,
+  OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
+  OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+  LOG_LEVEL: process.env.LOG_LEVEL,
+  ENABLE_OBSERVABILITY: process.env.ENABLE_OBSERVABILITY,
 };
 
 const rawPublic = {
@@ -61,6 +69,7 @@ const _public = load(PublicEnvSchema, rawPublic, "public");
 // Normalize feature flags
 const flags = {
   ENABLE_CONNECTOR_HTTP: server.ENABLE_CONNECTOR_HTTP === "true",
+  ENABLE_OBSERVABILITY: server.ENABLE_OBSERVABILITY === "true",
 };
 
 export const env = {

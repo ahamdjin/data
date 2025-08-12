@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { Embedder } from "../Embedder";
 import { env } from "@/config/env";
+import { withSpan } from "@/observability/spans";
 
 type Opts = { model: "text-embedding-3-small" | "text-embedding-3-large" };
 
@@ -13,11 +14,17 @@ export function createOpenAIEmbedder(opts: Opts): Embedder {
     dim,
     async embed(texts: string[]) {
       if (!texts.length) return [];
-      const res = await client.embeddings.create({
-        model: opts.model,
-        input: texts,
-      });
-      return res.data.map(d => d.embedding as number[]);
+      return withSpan(
+        "llm.embed",
+        { vendor: "openai", model: opts.model, count: texts.length },
+        async () => {
+          const res = await client.embeddings.create({
+            model: opts.model,
+            input: texts,
+          });
+          return res.data.map(d => d.embedding as number[]);
+        },
+      );
     },
   };
 }
