@@ -35,6 +35,10 @@ export async function POST(req: NextRequest) {
 
   const jobId = audit.id;
 
+  if (!queue) {
+    return NextResponse.json({ ok: false, error: "Queue not configured" }, { status: 500 });
+  }
+
   await queue.add(payload.type, payload, { jobId });
 
   return NextResponse.json({ ok: true, id: jobId });
