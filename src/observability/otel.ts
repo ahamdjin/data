@@ -3,7 +3,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { diag, DiagConsoleLogger, DiagLogLevel } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
-import { Resource } from "@opentelemetry/resources";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 
 let started = false;
 
@@ -18,7 +18,7 @@ export async function startOtelOnce() {
     : undefined;
 
   const sdk = new NodeSDK({
-    resource: new Resource({
+    resource: resourceFromAttributes({
       [SemanticResourceAttributes.SERVICE_NAME]: env.server.OTEL_SERVICE_NAME,
       [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: env.server.NODE_ENV,
     }),
