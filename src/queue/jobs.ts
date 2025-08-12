@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export type JobType = "connector.ingest" | "dataset.embed" | "schema.sync" | "files.ingest";
+export type JobType = "connector.ingest" | "dataset.embed" | "schema.sync" | "files.ingest" | "fhir.ingest";
 
 export const BaseJobZ = z.object({
   orgId: z.string().uuid(),
@@ -38,10 +38,27 @@ export const FilesIngestZ = BaseJobZ.extend({
 
 export type FilesIngest = z.infer<typeof FilesIngestZ>;
 
+export const FhirIngestZ = BaseJobZ.extend({
+  type: z.literal("fhir.ingest"),
+  datasetId: z.string().uuid(),
+  config: z.record(z.any()),
+  mode: z.enum(["bulk","search"]).default("bulk"),
+  scope: z.object({
+    level: z.enum(["system","patient","group"]).default("system"),
+    id: z.string().optional()
+  }).default({ level: "system" }),
+  resourceTypes: z.array(z.string()).default(["Patient","Condition","Observation","Encounter","DocumentReference"]),
+  since: z.string().datetime().optional(),
+  pageSize: z.number().int().positive().max(2000).default(200),
+});
+
+export type FhirIngest = z.infer<typeof FhirIngestZ>;
+
 export const AnyJobZ = z.discriminatedUnion("type", [
   ConnectorIngestZ,
   DatasetEmbedZ,
   FilesIngestZ,
+  FhirIngestZ,
 ]);
 
 export type AnyJob = z.infer<typeof AnyJobZ>;

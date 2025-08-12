@@ -81,6 +81,9 @@ export async function loadPlugins() {
       const az = await import("./src__plugins__azure-blob__manifest");
       manifests.push(definePlugin(az.default));
 
+      const fhir = await import("./src__plugins__fhir__manifest");
+      manifests.push(definePlugin(fhir.default));
+
       // Register
       for (const m of manifests) {
         plugins.push(m);
