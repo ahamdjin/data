@@ -1,6 +1,7 @@
 // src/db/adapters/postgres.ts
 import postgres from 'postgres';
 import type { DbAdapter, QueryParams } from '../Adapter';
+import { withSpan } from "@/observability/spans";
 
 export function createPostgresAdapter(url: string): DbAdapter {
   const sql = postgres(url, { max: 10 }); // connection pool
@@ -10,9 +11,14 @@ export function createPostgresAdapter(url: string): DbAdapter {
     capabilities: ['sql', 'vector', 'json', 'fulltext'],
 
     async query<T = unknown>(q: string, params: QueryParams = []) {
-      // postgres.js supports unsafe w/ params
-      const rows = await sql.unsafe(q, params);
-      return rows as unknown as T[];
+      return withSpan(
+        "db.query",
+        { db_system: "postgresql", "db.statement": q.slice(0, 2000) },
+        async () => {
+          const rows = await sql.unsafe(q, params);
+          return rows as unknown as T[];
+        }
+      );
     },
 
     table<T = unknown>(name: string) {
@@ -26,27 +32,29 @@ export function createPostgresAdapter(url: string): DbAdapter {
     },
 
     async upsertEmbedding({ table, id, vector, payload }) {
-      // Requires pgvector + columns: id, embedding, payload (jsonb)
-      await sql.unsafe(
-        `INSERT INTO ${table} (id, embedding, payload)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (id) DO UPDATE
-           SET embedding = EXCLUDED.embedding,
-               payload   = EXCLUDED.payload`,
-        [id, vector, payload ?? {}],
-      );
+      return withSpan("db.vector.upsert", { table }, async () => {
+        await sql.unsafe(
+          `INSERT INTO ${table} (id, embedding, payload)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (id) DO UPDATE
+             SET embedding = EXCLUDED.embedding,
+                 payload   = EXCLUDED.payload`,
+          [id, vector, payload ?? {}],
+        );
+      });
     },
 
     async similar({ table, vector, topK = 5 }) {
-      // Cosine distance with pgvector’s <=> operator; adjust if you use L2
-      const rows = await sql.unsafe(
-        `SELECT id, 1 - (embedding <=> $1) AS score
-           FROM ${table}
-          ORDER BY embedding <=> $1
-          LIMIT $2`,
-        [vector, topK],
-      );
-      return rows as Array<{ id: string | number; score: number }>;
+      return withSpan("db.vector.query", { table, topK }, async () => {
+        const rows = await sql.unsafe(
+          `SELECT id, 1 - (embedding <=> $1) AS score
+             FROM ${table}
+            ORDER BY embedding <=> $1
+            LIMIT $2`,
+          [vector, topK],
+        );
+        return rows as Array<{ id: string | number; score: number }>;
+      });
     },
 
     async close() {

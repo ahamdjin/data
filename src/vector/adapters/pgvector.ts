@@ -1,5 +1,6 @@
 import type { VectorStore, Vector } from "../VectorStore";
 import { getAdapter } from "@/db/registry";
+import { withSpan } from "@/observability/spans";
 
 /**
  * We store vectors directly in document_chunks.embedding.
@@ -20,23 +21,27 @@ export function createPgvectorStore(dim: number): VectorStore {
          WHERE id = $1::uuid AND dataset_id = $3::uuid
       `;
 
-      for (const v of vectors) {
-        await db.query(sql, [v.id, v.vector, datasetId]);
-      }
+      return withSpan("vector.upsert", { store: "pgvector", count: vectors.length }, async () => {
+        for (const v of vectors) {
+          await db.query(sql, [v.id, v.vector, datasetId]);
+        }
+      });
     },
 
     async query({ namespace, vector, topK = 5 }) {
       const [orgId, datasetId] = namespace.split(":");
       const db = getAdapter("default");
-      const rows = await db.query<{ id: string; score: number }>(
-        `SELECT id, 1 - (embedding <=> $1) AS score
-           FROM document_chunks
-          WHERE dataset_id = $2 AND embedding IS NOT NULL
-          ORDER BY embedding <=> $1
-          LIMIT $3`,
-        [vector, datasetId, topK]
-      );
-      return rows.map(r => ({ id: r.id, score: r.score }));
+      return withSpan("vector.query", { store: "pgvector", topK }, async () => {
+        const rows = await db.query<{ id: string; score: number }>(
+          `SELECT id, 1 - (embedding <=> $1) AS score
+             FROM document_chunks
+            WHERE dataset_id = $2 AND embedding IS NOT NULL
+            ORDER BY embedding <=> $1
+            LIMIT $3`,
+          [vector, datasetId, topK]
+        );
+        return rows.map(r => ({ id: r.id, score: r.score }));
+      });
     },
   };
 }

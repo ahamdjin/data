@@ -8,6 +8,12 @@ import { getAdapter } from "@/db/registry";
 import { loadPlugins, getConnector } from "@/plugins/registry";
 import { getVectorStore } from "@/vector/registry";
 import { getEmbedder } from "@/embedding/registry";
+import { startOtelOnce } from "@/observability/otel";
+import { childLogger } from "@/observability/logger";
+import { getTraceIds } from "@/observability/correlation";
+import { auditLlmCall } from "@/observability/audit";
+
+await startOtelOnce();
 
 // Create Redis connection only when configured so builds can proceed without Redis.
 let connection: IORedis | undefined;
@@ -59,6 +65,8 @@ async function processConnectorIngest(job: Job<AnyJob>) {
 async function processDatasetEmbed(job: Job<AnyJob>) {
   const payload = DatasetEmbedZ.parse(job.data);
   const { orgId, datasetId, batchSize } = payload;
+  const log = childLogger({ jobId: job.id, orgId });
+  log.info({ ...getTraceIds(), datasetId }, "embed job start");
 
   return withTenant(orgId, async (db) => {
     const store = getVectorStore();
@@ -90,7 +98,16 @@ async function processDatasetEmbed(job: Job<AnyJob>) {
     const vectors: { id: string; vector: number[] }[] = [];
     for (let i = 0; i < batch.length; i += MAX_PER_CALL) {
       const slice = batch.slice(i, i + MAX_PER_CALL);
+      const t0 = Date.now();
       const embeddings = await embedder.embed(slice.map(s => s.content));
+      const latency = Date.now() - t0;
+      await auditLlmCall({
+        orgId,
+        model: embedder.name,
+        operation: "embed",
+        latencyMs: latency,
+        meta: { count: slice.length },
+      });
       for (let j = 0; j < slice.length; j++) {
         vectors.push({ id: slice[j].id, vector: embeddings[j] });
       }
@@ -105,6 +122,7 @@ async function processDatasetEmbed(job: Job<AnyJob>) {
       [job.id, await job.getProgress()]
     );
 
+    log.info({ count: vectors.length }, "embed batch done");
     return { done: false, count: vectors.length };
   });
 }
