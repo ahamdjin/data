@@ -58,6 +58,47 @@ model Dataset {
   @@index([organizationId])
 }
 
+model Document {
+  id             String   @id @default(uuid())
+  organizationId String
+  datasetId      String
+  source         String
+  mimeType       String?
+  title          String?
+  meta           Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  dataset      Dataset      @relation(fields: [datasetId], references: [id])
+  chunks       DocumentChunk[]
+
+  @@index([organizationId])
+  @@index([datasetId])
+}
+
+model DocumentChunk {
+  id             String   @id @default(uuid())
+  organizationId String
+  datasetId      String
+  documentId     String
+  ordinal        Int
+  content        String   @db.Text
+  embedding      Unsupported("vector")
+  meta           Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  dataset      Dataset      @relation(fields: [datasetId], references: [id])
+  document     Document     @relation(fields: [documentId], references: [id])
+
+  @@index([organizationId])
+  @@index([datasetId])
+  @@index([documentId])
+  @@unique([documentId, ordinal])
+}
+
 model FhirResource {
   id           String                @id @default(cuid())
   resourceType String

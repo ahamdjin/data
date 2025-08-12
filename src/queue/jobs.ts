@@ -17,8 +17,17 @@ export const ConnectorIngestZ = BaseJobZ.extend({
 
 export type ConnectorIngest = z.infer<typeof ConnectorIngestZ>;
 
+export const DatasetEmbedZ = BaseJobZ.extend({
+  type: z.literal("dataset.embed"),
+  datasetId: z.string().uuid(),
+  batchSize: z.number().int().positive().max(256).default(64),
+});
+
+export type DatasetEmbed = z.infer<typeof DatasetEmbedZ>;
+
 export const AnyJobZ = z.discriminatedUnion("type", [
   ConnectorIngestZ,
+  DatasetEmbedZ,
 ]);
 
 export type AnyJob = z.infer<typeof AnyJobZ>;
