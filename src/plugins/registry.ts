@@ -66,6 +66,12 @@ export async function loadPlugins() {
       const sqlite = await import("./src__plugins__sqlite__manifest");
       manifests.push(definePlugin(sqlite.default));
 
+      const bq = await import("./src__plugins__bigquery__manifest");
+      manifests.push(definePlugin(bq.default));
+
+      const snow = await import("./src__plugins__snowflake__manifest");
+      manifests.push(definePlugin(snow.default));
+
       // Register
       for (const m of manifests) {
         plugins.push(m);

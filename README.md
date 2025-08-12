@@ -108,3 +108,45 @@ curl -X POST http://localhost:3000/api/query/firestore \
   }'
 ```
 
+## Warehouse Connectors
+
+Read-only SQL connectors are available for Google BigQuery and Snowflake. Both expose a `query({ sql, params })` API and block
+mutating statements until a policy layer is added.
+
+### BigQuery
+
+Authentication uses Application Default Credentials. Set `GOOGLE_APPLICATION_CREDENTIALS` to a service account JSON path or pass
+the JSON directly via the `serviceAccountJson` config field.
+
+```bash
+curl -X POST http://localhost:3000/api/query/bigquery \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "config": { "projectId": "my-gcp-project" },
+    "sql": "SELECT @p1 AS a, @p2 AS b WHERE @p1<$2",
+    "params": [5, 10]
+  }'
+```
+
+### Snowflake
+
+Provide account, username, and either `password` or a `privateKey` with optional `authenticator`. You can also include warehouse,
+database, and schema to avoid `USE` statements.
+
+```bash
+curl -X POST http://localhost:3000/api/query/snowflake \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "config": {
+      "account": "xy12345.us-east-1",
+      "username": "MY_USER",
+      "password": "MY_PASS",
+      "warehouse": "COMPUTE_WH",
+      "database": "ANALYTICS",
+      "schema": "PUBLIC"
+    },
+    "sql": "SELECT ? AS a, ? AS b",
+    "params": [1, "x"]
+  }'
+```
+
