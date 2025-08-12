@@ -14,6 +14,8 @@ const ServerEnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   // Misc runtime knobs
   PORT: z.coerce.number().default(3000),
+  REDIS_URL: z.string().url().describe("Redis connection URL for BullMQ"),
+  QUEUE_CONCURRENCY: z.coerce.number().default(5),
   // Feature flags (as strings -> booleans later)
   ENABLE_CONNECTOR_HTTP: z.string().optional(), // "true"/"false"
 });
@@ -42,6 +44,8 @@ const rawServer = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   PORT: process.env.PORT,
+  REDIS_URL: process.env.REDIS_URL,
+  QUEUE_CONCURRENCY: process.env.QUEUE_CONCURRENCY,
   ENABLE_CONNECTOR_HTTP: process.env.ENABLE_CONNECTOR_HTTP,
 };
 
