@@ -60,6 +60,12 @@ export async function loadPlugins() {
       const fs = await import("./src__plugins__firestore__manifest");
       manifests.push(definePlugin(fs.default));
 
+      const mysql = await import("./src__plugins__mysql__manifest");
+      manifests.push(definePlugin(mysql.default));
+
+      const sqlite = await import("./src__plugins__sqlite__manifest");
+      manifests.push(definePlugin(sqlite.default));
+
       // Register
       for (const m of manifests) {
         plugins.push(m);
