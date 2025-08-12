@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { startWorkerOnce } from "@/queue/boot";
+
+await startWorkerOnce();
 
 const inter = Inter({ subsets: ["latin"] });
 
