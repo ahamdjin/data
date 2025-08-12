@@ -12,48 +12,52 @@ generator client {
 }
 
 model Organization {
-  id        String       @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  memberships Membership[]
-  apiKeys     ApiKey[]
-  datasets    Dataset[]
-  fhirResources FhirResource[]
+  memberships    Membership[]
+  apiKeys        ApiKey[]
+  datasets       Dataset[]
+  fhirResources  FhirResource[]
+  documents      Document[]
+  documentChunks DocumentChunk[]
 }
 
 model Membership {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   userId         String
   organizationId String
   role           String
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@unique([userId, organizationId])
 }
 
 model ApiKey {
-  id             String       @id @default(uuid())
+  id             String    @id @default(uuid())
   organizationId String
   name           String
   hashedKey      String
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime  @default(now())
   lastUsedAt     DateTime?
-  disabled       Boolean      @default(false)
+  disabled       Boolean   @default(false)
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 }
 
 model Dataset {
-  id             String       @id @default(uuid())
+  id             String @id @default(uuid())
   organizationId String
   name           String
   meta           Json?
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  documents      Document[]
+  documentChunks DocumentChunk[]
 
   @@index([organizationId])
 }
@@ -69,8 +73,8 @@ model Document {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  dataset      Dataset      @relation(fields: [datasetId], references: [id])
+  organization Organization    @relation(fields: [organizationId], references: [id])
+  dataset      Dataset         @relation(fields: [datasetId], references: [id])
   chunks       DocumentChunk[]
 
   @@index([organizationId])
@@ -78,39 +82,39 @@ model Document {
 }
 
 model DocumentChunk {
-  id             String   @id @default(uuid())
+  id             String                @id @default(uuid())
   organizationId String
   datasetId      String
   documentId     String
   ordinal        Int
-  content        String   @db.Text
+  content        String                @db.Text
   embedding      Unsupported("vector")
   meta           Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id])
   dataset      Dataset      @relation(fields: [datasetId], references: [id])
   document     Document     @relation(fields: [documentId], references: [id])
 
+  @@unique([documentId, ordinal])
   @@index([organizationId])
   @@index([datasetId])
   @@index([documentId])
-  @@unique([documentId, ordinal])
 }
 
 model FhirResource {
-  id           String                @id @default(cuid())
-  resourceType String
-  patientId    String?
-  encounterId  String?
-  rawJson      Json
-  chunkText    String                @db.Text
-  embedding    Unsupported("vector")
+  id             String                @id @default(cuid())
+  resourceType   String
+  patientId      String?
+  encounterId    String?
+  rawJson        Json
+  chunkText      String                @db.Text
+  embedding      Unsupported("vector")
   organizationId String
-  createdAt    DateTime              @default(now())
+  createdAt      DateTime              @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@index([patientId])
   @@index([organizationId])
