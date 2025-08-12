@@ -16,11 +16,12 @@ export type Capability = z.infer<typeof CapabilityZ>;
 export const ConnectorConfigFieldZ = z.object({
   key: z.string(),             // e.g. "DATABASE_URL" or "apiKey"
   label: z.string(),           // e.g. "Database URL"
-  type: z.enum(["string", "number", "boolean", "password", "json"]),
+  type: z.enum(["string", "number", "boolean", "password", "json", "select"]),
   required: z.boolean().default(true),
   secret: z.boolean().default(false),
   description: z.string().optional(),
   defaultValue: z.any().optional(),
+  choices: z.array(z.string()).optional(),
 });
 
 export type ConnectorConfigField = z.infer<typeof ConnectorConfigFieldZ>;
