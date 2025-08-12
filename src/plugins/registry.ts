@@ -54,6 +54,14 @@ export async function loadPlugins() {
       const http = await import("./src__plugins__custom-http__manifest");
       manifests.push(definePlugin(http.default));
 
+      // MySQL plugin
+      const mysql = await import("./src__plugins__mysql__manifest");
+      manifests.push(definePlugin(mysql.default));
+
+      // SQLite (libsql/Turso) plugin
+      const sqlite = await import("./src__plugins__sqlite__manifest");
+      manifests.push(definePlugin(sqlite.default));
+
       // Register
       for (const m of manifests) {
         plugins.push(m);
