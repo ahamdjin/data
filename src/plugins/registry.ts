@@ -54,6 +54,12 @@ export async function loadPlugins() {
       const http = await import("./src__plugins__custom-http__manifest");
       manifests.push(definePlugin(http.default));
 
+      const mongo = await import("./src__plugins__mongo__manifest");
+      manifests.push(definePlugin(mongo.default));
+
+      const fs = await import("./src__plugins__firestore__manifest");
+      manifests.push(definePlugin(fs.default));
+
       // Register
       for (const m of manifests) {
         plugins.push(m);

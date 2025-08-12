@@ -80,3 +80,31 @@ npx prisma migrate dev --name add_fhir_embedding
 npm run ingest:fhir -- --sample
 npm run dev
 ```
+
+## NoSQL Connectors
+
+This project includes read-only connectors for MongoDB and Firestore. Both use a JSON-based query shape (no SQL required).
+
+### MongoDB
+
+```bash
+curl -X POST http://localhost:3000/api/query/mongo \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "config": { "mongoUrl": "mongodb+srv://user:pass@cluster", "database": "sample_mflix" },
+    "mongo": { "collection": "movies", "filter": {"year": {"$gte": 2015}}, "limit": 3 }
+  }'
+```
+
+### Firestore
+
+Set `FIREBASE_SERVICE_ACCOUNT_JSON` in your server environment to a service-account JSON string.
+
+```bash
+curl -X POST http://localhost:3000/api/query/firestore \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "firestore": { "collection": "articles", "where": [["published","==",true]], "limit": 5 }
+  }'
+```
+
